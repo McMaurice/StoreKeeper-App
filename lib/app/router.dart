@@ -17,7 +17,7 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         final isEditing = extra?['isEditing'] ?? false;
-        final product = extra?['product'] ?? {};
+        final product = extra?['product'] as Map<String, dynamic>?;
         return ProductFormScreen(isEditing: isEditing, product: product);
       },
     ),

@@ -124,13 +124,21 @@ class ProductScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                customButton('Edit', AppColors.primaryColor, Icons.edit, () {
-                  context.push(
-                    '/product_form',
-                    extra: {'isEditing': true, 'product': product},
-                  );
-                }),
-                customButton('Delete', Colors.red, Icons.delete, () {}),
+                CustomButton(
+                  title: 'Edit',
+                  color: AppColors.primaryColor,
+                  onPressed: () {
+                    context.push(
+                      '/product_form',
+                      extra: {'isEditing': true, 'product': product},
+                    );
+                  },
+                ),
+                CustomButton(
+                  title: "Delete",
+                  color: Colors.red,
+                  onPressed: () {},
+                ),
               ],
             ),
           ],

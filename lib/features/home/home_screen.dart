@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.grey.shade100,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        onPressed: () => context.push('/product_form'),
+        onPressed: () => context.push('/product_form', extra: {'isEditing': false}),
         child: const Icon(Icons.library_add, color: Colors.white),
       ),
       body: SafeArea(

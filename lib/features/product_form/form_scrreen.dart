@@ -108,7 +108,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Product Name'),
+                decoration: const InputDecoration(
+                  labelText: 'Product Name',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) => value == null || value.isEmpty
                     ? 'Enter product name'
                     : null,
@@ -118,7 +121,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 controller: _quantityController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(labelText: 'Quantity'),
+                decoration: const InputDecoration(
+                  labelText: 'Quantity',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Enter quantity' : null,
               ),
@@ -128,6 +134,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
                   labelText: 'Amount',
                   prefixText: '₦',
                 ),
@@ -138,7 +145,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Enter product description';
@@ -151,7 +161,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _status,
-                decoration: const InputDecoration(labelText: 'Status'),
+                decoration: const InputDecoration(
+                  labelText: 'Status',
+                  border: OutlineInputBorder(),
+                ),
                 items: const [
                   DropdownMenuItem(value: 'InStock', child: Text('InStock')),
                   DropdownMenuItem(value: 'Limited', child: Text('Limited')),
@@ -206,11 +219,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: customButton(
-                  widget.isEditing ? 'Update' : 'Create',
-                  AppColors.primaryColor,
-                  null,
-                  _saveProduct,
+                child: CustomButton(
+                  title: widget.isEditing ? 'Update' : 'Create',
+                  color: AppColors.primaryColor,
+                  onPressed: () {
+                    setState(() {
+                      _saveProduct();
+                    });
+                  },
                 ),
               ),
             ],
