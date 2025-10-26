@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:storekepper_app/welcome_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:storekepper_app/app/router.dart';
+import 'package:storekepper_app/app/theme/theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Lock orientation to portrait up
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
 
@@ -10,13 +15,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
       title: 'StoreKepper App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const WelcomeScreen(),
+      theme: AppTheme.lightTheme,
     );
   }
 }
