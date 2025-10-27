@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:storekepper_app/app/theme/color.dart';
-import 'package:storekepper_app/core/widgets/button.dart';
+import 'package:storekepper_app/app/constants/color.dart';
+import 'package:storekepper_app/app/utilities/formaters.dart';
+import 'package:storekepper_app/domain/provider/product_provider.dart';
+import 'package:storekepper_app/models/product_model.dart';
+import 'package:storekepper_app/ui/widgets/button.dart';
 
-class ProductScreen extends StatelessWidget {
-  const ProductScreen({
-    super.key,
-    required this.product,
-    // required this.onDelete,
-    // required this.onEdit,
-  });
+class ProductScreen extends ConsumerStatefulWidget {
+  const ProductScreen({super.key, required this.product});
 
-  // Product data passed from HomeScreen
-  final Map<String, dynamic> product;
+  final ProductModel product;
+
+  @override
+  ConsumerState<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends ConsumerState<ProductScreen> {
+  void onDelete() async {
+    final notifier = ref.read(productNotifierProvider.notifier);
+    await notifier.deleteProduct(widget.product.id!);
+    if (!mounted) return;
+    context.pop();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Safely extract product details with default values
-    final String name = product['name'] ?? 'Unnamed Product';
-    final String image = product['image'] ?? 'assets/placeholder.png';
-    final int quantity = product['quantity'] ?? 0;
-    final int price = product['price'] ?? 0;
-    final String status = product['status'] ?? 'Unknown';
-    final String description = product['description'] ?? 'Unknown';
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(name),
+        title: Text(widget.product.name),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
@@ -43,7 +45,7 @@ class ProductScreen extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
-                    image,
+                    widget.product.imagePath,
                     width: double.infinity,
                     height: 400,
                     fit: BoxFit.fill,
@@ -55,15 +57,17 @@ class ProductScreen extends StatelessWidget {
                     horizontal: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: status == 'InStock'
+                    color: widget.product.status == 'InStock'
                         ? Colors.green.withAlpha(40)
                         : Colors.red.withAlpha(40),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    status,
+                    widget.product.status,
                     style: TextStyle(
-                      color: status == 'InStock' ? Colors.green : Colors.red,
+                      color: widget.product.status == 'InStock'
+                          ? Colors.green
+                          : Colors.red,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -73,7 +77,7 @@ class ProductScreen extends StatelessWidget {
             const SizedBox(height: 10),
             // Product name
             Text(
-              description,
+              widget.product.description,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.normal,
@@ -92,7 +96,7 @@ class ProductScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '$quantity',
+                      '${widget.product.quantity}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -108,7 +112,7 @@ class ProductScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '₦$price',
+                      '₦${AppFormatter.currency(widget.product.price)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -130,14 +134,14 @@ class ProductScreen extends StatelessWidget {
                   onPressed: () {
                     context.push(
                       '/product_form',
-                      extra: {'isEditing': true, 'product': product},
+                      extra: {'isEditing': true, 'product': widget.product},
                     );
                   },
                 ),
                 CustomButton(
                   title: "Delete",
                   color: Colors.red,
-                  onPressed: () {},
+                  onPressed: () => onDelete(),
                 ),
               ],
             ),

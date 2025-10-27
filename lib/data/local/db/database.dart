@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:storekepper_app/data/local/entity/entity.dart';
 
@@ -11,7 +10,13 @@ part 'database.g.dart';
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(path.join(dbFolder.path, 'storeKepper.sqlite'));
+    final file = File('${dbFolder.path}/storeKepper.sqlite');
+
+    // Delete old database file if you alter the entities
+    // if (await file.exists()) {
+    //   await file.delete();
+    //   print('Old database deleted, creating new one.');
+    // }
 
     return NativeDatabase(file);
   });

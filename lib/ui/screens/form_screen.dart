@@ -1,52 +1,86 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:storekepper_app/app/theme/color.dart';
-import 'package:storekepper_app/core/widgets/button.dart';
+import 'package:storekepper_app/app/constants/color.dart';
+import 'package:storekepper_app/app/utilities/image_helper.dart';
+import 'package:storekepper_app/domain/provider/product_provider.dart';
+import 'package:storekepper_app/models/product_model.dart';
+import 'package:storekepper_app/ui/widgets/button.dart';
 
-class ProductFormScreen extends StatefulWidget {
+class ProductFormScreen extends ConsumerStatefulWidget {
   const ProductFormScreen({
     super.key,
     required this.isEditing,
     required this.product,
   });
   final bool isEditing;
-  final Map<String, dynamic>? product;
+  final ProductModel? product;
 
   @override
-  State<ProductFormScreen> createState() => _ProductFormScreenState();
+  ConsumerState<ProductFormScreen> createState() => _ProductFormScreenState();
 }
 
-class _ProductFormScreenState extends State<ProductFormScreen> {
+class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _quantityController = TextEditingController();
-  final _amountController = TextEditingController();
+  final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _status = 'InStock';
-  final List<File> _images = [];
-
   final picker = ImagePicker();
+  String _status = 'InStock';
+  String _imagePath = '';
 
   @override
   void initState() {
     super.initState();
+
     if (widget.isEditing && widget.product != null) {
-      _nameController.text = widget.product!['name'] ?? '';
-      _quantityController.text = widget.product!['quantity']?.toString() ?? '';
-      _amountController.text = widget.product!['amount']?.toString() ?? '';
-      _descriptionController.text = widget.product!['description'] ?? '';
-      _status = widget.product!['status'] ?? 'Available';
+      _nameController.text = widget.product!.name;
+      _quantityController.text = widget.product!.quantity.toString();
+      _priceController.text = widget.product!.price.toString();
+      _descriptionController.text = widget.product!.description;
+      _status = widget.product!.status;
+      _imagePath = widget.product!.imagePath;
     }
   }
 
+  final imageHelper = ImageHelper();
+
   Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await picker.pickImage(source: source, imageQuality: 80);
-    if (pickedFile != null) {
-      setState(() => _images.add(File(pickedFile.path)));
+    final newPath = await imageHelper.pickAndSaveImage(source);
+
+    if (newPath != null && newPath.isNotEmpty) {
+      setState(() => _imagePath = newPath);
+    } else {
+      setState(() => _imagePath = 'assets/no_image.png');
     }
-    Navigator.pop(context);
+
+    if (context.mounted) Navigator.pop(context);
+  }
+
+  void onSave() async {
+    final notifier = ref.read(productNotifierProvider.notifier);
+    final product = ProductModel(
+      id: widget.isEditing ? widget.product!.id : null,
+      name: _nameController.text,
+      description: _descriptionController.text,
+      quantity: int.tryParse(_quantityController.text) ?? 0,
+      price: int.tryParse(_priceController.text) ?? 0,
+      imagePath: _imagePath,
+      status: _status,
+    );
+
+    if (widget.isEditing) {
+      await notifier.updateProduct(product);
+    } else {
+      await notifier.addProduct(product);
+    }
+    _saveProduct(_nameController.text);
+    if (!mounted) return;
+    context.go('/home');
   }
 
   void _showImageSourceSelector() {
@@ -79,18 +113,18 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     );
   }
 
-  void _saveProduct() {
+  void _saveProduct(String name) {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: AppColors.primaryColor,
           content: Text(
             widget.isEditing
-                ? 'Product updated successfully'
-                : 'Product created successfully',
+                ? '$name Updated Successfully'
+                : '$name Registerd Successfully',
           ),
         ),
       );
-      Navigator.pop(context);
     }
   }
 
@@ -130,7 +164,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _amountController,
+                controller: _priceController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
@@ -159,18 +193,45 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _status,
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
+              AbsorbPointer(
+                absorbing: !widget.isEditing,
+                child: Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: _status,
+                      iconDisabledColor: Colors.grey,
+                      iconEnabledColor: AppColors.primaryColor,
+                      decoration: InputDecoration(
+                        labelText: 'Status',
+                        border: const OutlineInputBorder(),
+                        // Optional: subtle gray fill when locked
+                        fillColor: widget.isEditing
+                            ? Colors.grey.shade100
+                            : null,
+                        filled: widget.isEditing,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'InStock',
+                          child: Text('InStock'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Limited',
+                          child: Text('Limited'),
+                        ),
+                      ],
+                      onChanged: (value) => setState(() => _status = value!),
+                    ),
+                    if (!widget.isEditing)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: Icon(Icons.lock, color: Colors.grey, size: 20),
+                      ),
+                  ],
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'InStock', child: Text('InStock')),
-                  DropdownMenuItem(value: 'Limited', child: Text('Limited')),
-                ],
-                onChanged: (value) => setState(() => _status = value!),
               ),
+
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: _showImageSourceSelector,
@@ -182,7 +243,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: _images.isEmpty
+                  child: _imagePath.isEmpty
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -197,24 +258,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         )
                       : SizedBox(
                           height: 120,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _images.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 8),
-                            itemBuilder: (_, index) => ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                _images[index],
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
+                          width: 120,
+                          child: _imagePath.startsWith('assets/')
+                              ? Image.asset(_imagePath, fit: BoxFit.cover)
+                              : Image.file(
+                                  File(_imagePath),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Image.asset(
+                                        'assets/no_image.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                ),
                         ),
                 ),
               ),
+
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -222,11 +281,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 child: CustomButton(
                   title: widget.isEditing ? 'Update' : 'Create',
                   color: AppColors.primaryColor,
-                  onPressed: () {
-                    setState(() {
-                      _saveProduct();
-                    });
-                  },
+                  onPressed: () => onSave(),
                 ),
               ),
             ],

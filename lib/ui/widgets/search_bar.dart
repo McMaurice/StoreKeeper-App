@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:storekepper_app/app/theme/color.dart';
+import 'package:storekepper_app/app/constants/color.dart';
 
 class CustomSearchBar extends StatefulWidget {
-  const CustomSearchBar({super.key, value});
+  const CustomSearchBar({
+    super.key,
+    required this.onChanged,
+  });
+
+  // callback instead of storing state here
+  final ValueChanged<String> onChanged;
 
   @override
   State<CustomSearchBar> createState() => _CustomSearchBarState();
@@ -12,17 +18,6 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   final FocusNode _focusNode = FocusNode();
   final TextEditingController _controller = TextEditingController();
   bool isActive = false;
-
-  // Listen for focus changes
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      setState(() {
-        isActive = _focusNode.hasFocus;
-      });
-    });
-  }
 
   @override
   void dispose() {
@@ -35,19 +30,14 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   Widget build(BuildContext context) {
     return SearchBar(
       focusNode: _focusNode,
-      hintText: 'Anything in mind ?..',
-      leading: Icon(Icons.barcode_reader, color: AppColors.primaryColor),
+      controller: _controller,
+      hintText: 'Anything in mind?..',
+      leading: Icon(Icons.search, color: AppColors.primaryColor),
       backgroundColor: WidgetStatePropertyAll(
         isActive ? Colors.white : Colors.grey.shade200,
       ),
-      onTap: () {
-        setState(() {
-          isActive = true;
-        });
-      },
-      onChanged: (value) {
-        //TODO: Handle search query change
-      },
+      onTap: () => setState(() => isActive = true),
+      onChanged: widget.onChanged, // report change upward
     );
   }
 }
