@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:storekepper_app/app/theme/color.dart';
+import 'package:storekepper_app/app/constants/color.dart';
 
 class AppTheme {
   // LIGHT THEME USING CUSTOM COLORS
@@ -18,9 +18,9 @@ class AppTheme {
       surface: Colors.white,
       onSurface: AppColors.textColor,
     ),
-    
+
     // Custom font
-    fontFamily:GoogleFonts.exo2().fontFamily, 
+    fontFamily: GoogleFonts.exo2().fontFamily,
 
     // App bar styling
     appBarTheme: AppBarTheme(
