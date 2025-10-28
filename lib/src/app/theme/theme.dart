@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:storekepper_app/app/constants/color.dart';
+import 'package:storekepper_app/src/app/constants/color.dart';
 
 class AppTheme {
   // LIGHT THEME USING CUSTOM COLORS

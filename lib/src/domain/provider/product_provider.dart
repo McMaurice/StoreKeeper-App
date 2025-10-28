@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:storekepper_app/data/local/db/database.dart';
-import 'package:storekepper_app/models/product_model.dart';
+import 'package:storekepper_app/src/data/local/db/database.dart';
+import 'package:storekepper_app/src/models/product_model.dart';
 import 'package:drift/drift.dart';
 
 // --- MAPPERS SAMPLE RETURNED FROM DATABASE ---

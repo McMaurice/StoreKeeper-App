@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
-import 'package:storekepper_app/models/product_model.dart';
-import 'package:storekepper_app/ui/screens/form_screen.dart';
-import 'package:storekepper_app/ui/screens/home_screen.dart';
-import 'package:storekepper_app/ui/screens/product_screen.dart';
-import 'package:storekepper_app/ui/screens/welcome_screen.dart';
+import 'package:storekepper_app/src/models/product_model.dart';
+import 'package:storekepper_app/src/ui/screens/form_screen.dart';
+import 'package:storekepper_app/src/ui/screens/home_screen.dart';
+import 'package:storekepper_app/src/ui/screens/product_screen.dart';
+import 'package:storekepper_app/src/ui/screens/welcome_screen.dart';
 
 // Single router configuration
 final GoRouter router = GoRouter(
