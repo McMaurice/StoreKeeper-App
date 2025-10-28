@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:storekepper_app/app/constants/color.dart';
-import 'package:storekepper_app/app/utilities/image_helper.dart';
-import 'package:storekepper_app/domain/provider/product_provider.dart';
-import 'package:storekepper_app/models/product_model.dart';
-import 'package:storekepper_app/ui/widgets/button.dart';
+import 'package:storekepper_app/src/app/constants/color.dart';
+import 'package:storekepper_app/src/app/utilities/image_helper.dart';
+import 'package:storekepper_app/src/domain/provider/product_provider.dart';
+import 'package:storekepper_app/src/models/product_model.dart';
+import 'package:storekepper_app/src/ui/widgets/button.dart';
 
 class ProductFormScreen extends ConsumerStatefulWidget {
   const ProductFormScreen({
@@ -133,7 +134,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Product' : 'Create Product'),
+        title: Text(
+          widget.isEditing ? 'Edit Product' : 'Create Product',
+          style: TextStyle(fontFamily: GoogleFonts.exo2().fontFamily),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -162,10 +166,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   labelText: 'Quantity',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty || value == '0'
-                    ? 'Quantity cant be Zero'
-                    : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty || value == '0') {
+                    return 'Quantity cant be Zero';
+                  }
+                  final amount = int.tryParse(value);
+                  if (amount != null && amount > 1000000) {
+                    return 'Quantity too large';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -177,9 +187,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   labelText: 'Amount',
                   prefixText: '₦',
                 ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Enter amount or zero if unsure'
-                    : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Enter amount or zero if unsure';
+                  }
+                  final amount = int.tryParse(value);
+                  if (amount != null && amount > 1000000000) {
+                    return 'Amount too much';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -318,7 +335,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 width: double.infinity,
                 height: 48,
                 child: CustomButton(
-                  title: widget.isEditing ? 'Update' : 'Create',
+                  title: widget.isEditing ? 'Update' : 'Add Product',
                   color: AppColors.primaryColor,
                   onPressed: () => onSave(),
                 ),

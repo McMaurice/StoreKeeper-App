@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:storekepper_app/domain/provider/product_provider.dart';
-import 'package:storekepper_app/services/navigation/router.dart';
-import 'package:storekepper_app/app/theme/theme.dart';
+import 'package:storekepper_app/src/domain/provider/product_provider.dart';
+import 'package:storekepper_app/src/services/navigation/router.dart';
+import 'package:storekepper_app/src/app/theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,18 +26,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-  
-  // List<Map<String, dynamic>> get filteredProducts {
-  //   if (searchQuery.isEmpty) return products;
-  //   return products
-  //       .where(
-  //         (item) =>
-  //             item['name'].toLowerCase().contains(searchQuery.toLowerCase()),
-  //       )
-  //       .toList();
- 
-
-  
+// List<Map<String, dynamic>> get filteredProducts {
+//   if (searchQuery.isEmpty) return products;
+//   return products
+//       .where(
+//         (item) =>
+//             item['name'].toLowerCase().contains(searchQuery.toLowerCase()),
+//       )
+//       .toList();
 
 class HomeScresen extends ConsumerStatefulWidget {
   const HomeScresen({super.key});
@@ -56,7 +52,6 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
 
-
       body: Column(
         children: [
           Padding(
@@ -70,9 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
             ),
           ),
           Expanded(
-            child: 
-            
-            productsAsync.when(
+            child: productsAsync.when(
               data: (products) {
                 final filtered = products
                     .where(
@@ -80,12 +73,11 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
                         searchQuery.toLowerCase(),
                       ),
                     )
-                    .toList(); 
+                    .toList();
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No matching products'));
                 }
 
-                
                 return ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {

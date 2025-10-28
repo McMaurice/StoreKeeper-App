@@ -3,12 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:storekepper_app/app/constants/color.dart';
-import 'package:storekepper_app/app/utilities/formaters.dart';
-import 'package:storekepper_app/app/utilities/image_helper.dart';
-import 'package:storekepper_app/domain/provider/product_provider.dart';
-import 'package:storekepper_app/models/product_model.dart';
-import 'package:storekepper_app/ui/widgets/button.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:storekepper_app/src/app/constants/color.dart';
+import 'package:storekepper_app/src/app/utilities/formaters.dart';
+import 'package:storekepper_app/src/app/utilities/image_helper.dart';
+import 'package:storekepper_app/src/domain/provider/product_provider.dart';
+import 'package:storekepper_app/src/models/product_model.dart';
+import 'package:storekepper_app/src/ui/widgets/button.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({super.key, required this.product});
@@ -32,7 +33,13 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.product.name),
+        title: Text(
+          widget.product.name,
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: GoogleFonts.exo2().fontFamily,
+          ),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
@@ -63,8 +70,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                         ),
                 ),
                 Positioned(
-                  top: 5,
-                  left: 5,
+                  top: 3,
+                  left: 3,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 6,
@@ -113,7 +120,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${widget.product.quantity}',
+                      '${widget.product.quantity} ${AppFormatter.pluralFormatter("Unit", count: widget.product.quantity)} left',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,

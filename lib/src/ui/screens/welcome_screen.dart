@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 
-import 'package:storekepper_app/app/constants/color.dart';
+import 'package:storekepper_app/src/app/constants/color.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
