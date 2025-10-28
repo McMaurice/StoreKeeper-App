@@ -1,40 +1,34 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:storekepper_app/src/app/constants/color.dart';
 import 'package:storekepper_app/src/app/utilities/formaters.dart';
-import 'package:storekepper_app/src/app/utilities/image_helper.dart';
-import 'package:storekepper_app/src/domain/provider/product_provider.dart';
+import 'package:storekepper_app/src/domain/vm/product_screen_vm.dart';
 import 'package:storekepper_app/src/models/product_model.dart';
 import 'package:storekepper_app/src/ui/widgets/button.dart';
 
-class ProductScreen extends ConsumerStatefulWidget {
+class ProductScreen extends ConsumerWidget {
   const ProductScreen({super.key, required this.product});
-
   final ProductModel product;
 
   @override
-  ConsumerState<ProductScreen> createState() => _ProductScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final deleteThis = ref.watch(productViewModelProvider);
 
-class _ProductScreenState extends ConsumerState<ProductScreen> {
-  void onDelete() async {
-    await ImageHelper().deleteImage(widget.product.imagePath);
-    final notifier = ref.read(productNotifierProvider.notifier);
-    await notifier.deleteProduct(widget.product.id!);
-    if (!mounted) return;
-    context.pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<void>>(productViewModelProvider, (prev, next) {
+      next.whenOrNull(
+        data: (_) => context.pop(), // Close screen after delete
+        error: (err, _) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting product: $err'))),
+      );
+    });
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.product.name,
+          product.name,
           style: TextStyle(
             color: Colors.white,
             fontFamily: GoogleFonts.exo2().fontFamily,
@@ -55,15 +49,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: widget.product.imagePath.startsWith('assets/')
+                  child: product.imagePath.startsWith('assets/')
                       ? Image.asset(
-                          widget.product.imagePath,
+                          product.imagePath,
                           width: double.infinity,
                           height: 400,
                           fit: BoxFit.fill,
                         )
                       : Image.file(
-                          File(widget.product.imagePath),
+                          File(product.imagePath),
                           width: double.infinity,
                           height: 400,
                           fit: BoxFit.fill,
@@ -78,15 +72,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: widget.product.status == 'Limited'
+                      color: product.status == 'Limited'
                           ? Colors.red.withAlpha((0.5 * 100).toInt())
                           : Colors.green.withAlpha((0.5 * 100).toInt()),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      widget.product.status,
+                      product.status,
                       style: TextStyle(
-                        color: widget.product.status == 'Limited'
+                        color: product.status == 'Limited'
                             ? Colors.red
                             : Colors.green,
                         fontWeight: FontWeight.bold,
@@ -99,9 +93,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             const SizedBox(height: 10),
             // Product name
             Text(
-              (widget.product.description.isEmpty)
+              (product.description.isEmpty)
                   ? 'No description for this product.'
-                  : widget.product.description,
+                  : product.description,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.normal,
@@ -120,7 +114,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '${widget.product.quantity} ${AppFormatter.pluralFormatter("Unit", count: widget.product.quantity)} left',
+                      '${product.quantity} ${AppFormatter.pluralFormatter("Unit", count: product.quantity)} left',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
@@ -136,7 +130,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      '₦${AppFormatter.currency(widget.product.price)}',
+                      '₦${AppFormatter.currency(product.price)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -152,20 +146,31 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                CustomButton(
-                  title: 'Edit',
-                  color: AppColors.primaryColor,
-                  onPressed: () {
-                    context.push(
-                      '/product_form',
-                      extra: {'isEditing': true, 'product': widget.product},
-                    );
-                  },
+                SizedBox(
+                  width: 120,
+                  child: CustomButton(
+                    title: 'Edit',
+                    color: AppColors.primaryColor,
+                    onPressed: () {
+                      context.push(
+                        '/product_form',
+                        extra: {'isEditing': true, 'product': product},
+                      );
+                    },
+                  ),
                 ),
-                CustomButton(
-                  title: "Delete",
-                  color: Colors.red,
-                  onPressed: () => onDelete(),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 120,
+                  child: CustomButton(
+                    title: "Delete",
+                    color: Colors.red,
+                    onPressed: deleteThis.isLoading
+                        ? null
+                        : () => ref
+                              .read(productViewModelProvider.notifier)
+                              .deleteProduct(product),
+                  ),
                 ),
               ],
             ),

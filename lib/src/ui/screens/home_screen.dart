@@ -1,36 +1,30 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:storekepper_app/src/app/constants/color.dart';
 import 'package:storekepper_app/src/app/utilities/formaters.dart';
-import 'package:storekepper_app/src/domain/provider/product_provider.dart';
+import 'package:storekepper_app/src/domain/vm/home_screen_vm.dart';
 import 'package:storekepper_app/src/ui/widgets/search_bar.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> {
-  String searchQuery = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productsProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewModel = ref.watch(homeViewModelProvider);
+    final productsAsync = viewModel.products;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         title: Text(
-          'StoreKepper',
+          'StoreKeeper',
           style: TextStyle(
             color: Colors.white,
             fontFamily: GoogleFonts.exo2().fontFamily,
+            fontSize: 20,
           ),
         ),
         centerTitle: false,
@@ -39,32 +33,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             padding: const EdgeInsets.only(right: 10),
             child: SizedBox(
               height: 40,
-              width: 240, // Adjust width to fit AppBar
+              width: 240,
               child: CustomSearchBar(
-                onChanged: (value) => setState(() => searchQuery = value),
+                onChanged: (value) => viewModel.updateSearch(value),
               ),
             ),
           ),
         ],
       ),
-      backgroundColor: Colors.grey.shade100,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: () => context.push('/product_form'),
         child: const Icon(Icons.library_add, color: Colors.white),
       ),
+      backgroundColor: Colors.grey.shade100,
       body: productsAsync.when(
         data: (products) {
-          if (products.isEmpty) {
-            return const Center(child: Text('No products yet.'));
-          }
-          final filtered = products
-              .where(
-                (p) => p.name.toLowerCase().contains(searchQuery.toLowerCase()),
-              )
-              .toList();
+          final filtered = viewModel.filteredProducts(products);
           if (filtered.isEmpty) {
-            return const Center(child: Text('No matching products'));
+            return const Center(child: Text('No matching products.'));
           }
           return SafeArea(
             child: SingleChildScrollView(

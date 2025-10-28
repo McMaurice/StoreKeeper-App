@@ -57,7 +57,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
           decoration: InputDecoration(
             hintText: 'Anything in mind?..',
             border: InputBorder.none,
-            icon: Icon(Icons.search, color: AppColors.primaryColor),
+            icon: Icon(Icons.barcode_reader, color: AppColors.primaryColor),
           ),
           onChanged: (value) {
             widget.onChanged(value);
