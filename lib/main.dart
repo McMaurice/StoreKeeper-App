@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:storekepper_app/domain/provider/product_provider.dart';
-import 'package:storekepper_app/models/product_model.dart';
 import 'package:storekepper_app/services/navigation/router.dart';
 import 'package:storekepper_app/app/theme/theme.dart';
 
@@ -56,6 +55,8 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
+
+
       body: Column(
         children: [
           Padding(
@@ -69,7 +70,9 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
             ),
           ),
           Expanded(
-            child: productsAsync.when(
+            child: 
+            
+            productsAsync.when(
               data: (products) {
                 final filtered = products
                     .where(
@@ -81,6 +84,8 @@ class _HomeScreenState extends ConsumerState<HomeScresen> {
                 if (filtered.isEmpty) {
                   return const Center(child: Text('No matching products'));
                 }
+
+                
                 return ListView.builder(
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {

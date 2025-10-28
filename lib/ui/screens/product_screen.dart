@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:storekepper_app/app/constants/color.dart';
 import 'package:storekepper_app/app/utilities/formaters.dart';
+import 'package:storekepper_app/app/utilities/image_helper.dart';
 import 'package:storekepper_app/domain/provider/product_provider.dart';
 import 'package:storekepper_app/models/product_model.dart';
 import 'package:storekepper_app/ui/widgets/button.dart';
@@ -18,6 +21,7 @@ class ProductScreen extends ConsumerStatefulWidget {
 
 class _ProductScreenState extends ConsumerState<ProductScreen> {
   void onDelete() async {
+    await ImageHelper().deleteImage(widget.product.imagePath);
     final notifier = ref.read(productNotifierProvider.notifier);
     await notifier.deleteProduct(widget.product.id!);
     if (!mounted) return;
@@ -44,31 +48,42 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    widget.product.imagePath,
-                    width: double.infinity,
-                    height: 400,
-                    fit: BoxFit.fill,
-                  ),
+                  child: widget.product.imagePath.startsWith('assets/')
+                      ? Image.asset(
+                          widget.product.imagePath,
+                          width: double.infinity,
+                          height: 400,
+                          fit: BoxFit.fill,
+                        )
+                      : Image.file(
+                          File(widget.product.imagePath),
+                          width: double.infinity,
+                          height: 400,
+                          fit: BoxFit.fill,
+                        ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.product.status == 'InStock'
-                        ? Colors.green.withAlpha(40)
-                        : Colors.red.withAlpha(40),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    widget.product.status,
-                    style: TextStyle(
-                      color: widget.product.status == 'InStock'
-                          ? Colors.green
-                          : Colors.red,
-                      fontWeight: FontWeight.w600,
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: widget.product.status == 'Limited'
+                          ? Colors.red.withAlpha((0.5 * 100).toInt())
+                          : Colors.green.withAlpha((0.5 * 100).toInt()),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      widget.product.status,
+                      style: TextStyle(
+                        color: widget.product.status == 'Limited'
+                            ? Colors.red
+                            : Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -77,7 +92,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             const SizedBox(height: 10),
             // Product name
             Text(
-              widget.product.description,
+              (widget.product.description.isEmpty)
+                  ? 'No description for this product.'
+                  : widget.product.description,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.normal,

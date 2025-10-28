@@ -31,7 +31,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _descriptionController = TextEditingController();
   final picker = ImagePicker();
   String _status = 'InStock';
-  String _imagePath = '';
+  String _imagePath = 'assets/no_image.png';
 
   @override
   void initState() {
@@ -47,40 +47,43 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     }
   }
 
-  final imageHelper = ImageHelper();
-
   Future<void> _pickImage(ImageSource source) async {
-    final newPath = await imageHelper.pickAndSaveImage(source);
+    final newPath = await ImageHelper().pickAndSaveImage(source);
 
     if (newPath != null && newPath.isNotEmpty) {
+      if (!mounted) return;
+      // DELETE IMAGE FROM APP STORAGE WHEN DELETING A PRODUCT
+      if (widget.isEditing && newPath != _imagePath) {
+        await ImageHelper().deleteImage(_imagePath);
+      }
       setState(() => _imagePath = newPath);
-    } else {
-      setState(() => _imagePath = 'assets/no_image.png');
     }
-
-    if (context.mounted) Navigator.pop(context);
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   void onSave() async {
-    final notifier = ref.read(productNotifierProvider.notifier);
-    final product = ProductModel(
-      id: widget.isEditing ? widget.product!.id : null,
-      name: _nameController.text,
-      description: _descriptionController.text,
-      quantity: int.tryParse(_quantityController.text) ?? 0,
-      price: int.tryParse(_priceController.text) ?? 0,
-      imagePath: _imagePath,
-      status: _status,
-    );
+    if (_formKey.currentState!.validate()) {
+      final notifier = ref.read(productNotifierProvider.notifier);
+      final product = ProductModel(
+        id: widget.isEditing ? widget.product!.id : null,
+        name: _nameController.text,
+        description: _descriptionController.text,
+        quantity: int.tryParse(_quantityController.text) ?? 0,
+        price: int.tryParse(_priceController.text) ?? 0,
+        imagePath: _imagePath,
+        status: _status,
+      );
 
-    if (widget.isEditing) {
-      await notifier.updateProduct(product);
-    } else {
-      await notifier.addProduct(product);
+      if (widget.isEditing) {
+        await notifier.updateProduct(product);
+      } else {
+        await notifier.addProduct(product);
+      }
+      _saveNotifier(_nameController.text);
+      if (!mounted) return;
+      context.go('/home');
     }
-    _saveProduct(_nameController.text);
-    if (!mounted) return;
-    context.go('/home');
   }
 
   void _showImageSourceSelector() {
@@ -113,19 +116,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     );
   }
 
-  void _saveProduct(String name) {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.primaryColor,
-          content: Text(
-            widget.isEditing
-                ? '$name Updated Successfully'
-                : '$name Registerd Successfully',
-          ),
+  void _saveNotifier(String name) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.primaryColor,
+        content: Text(
+          widget.isEditing
+              ? '$name Updated Successfully'
+              : '$name Registerd Successfully',
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -148,6 +149,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ),
                 validator: (value) => value == null || value.isEmpty
                     ? 'Enter product name'
+                    : value.length < 3
+                    ? 'Name too short for a product'
                     : null,
               ),
               const SizedBox(height: 12),
@@ -160,7 +163,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter quantity' : null,
+                    value == null || value.isEmpty || value == '0'
+                    ? 'Quantity cant be Zero'
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -172,8 +177,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   labelText: 'Amount',
                   prefixText: '₦',
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter amount' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Enter amount or zero if unsure'
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -184,12 +190,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Enter product description';
-                  } else if (value.length > 200) {
-                    return 'Description cannot exceed 200 characters';
+                  if (value != null && value.isNotEmpty && value.length > 150) {
+                    return 'Description cannot exceed 150 characters';
                   }
-                  return null;
+                  return null; // valid in all other cases
                 },
               ),
               const SizedBox(height: 12),
@@ -239,11 +243,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   height: 120,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
+                    border: _imagePath.startsWith('assets/')
+                        ? Border.all(color: Colors.grey.shade400)
+                        : null,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: _imagePath.isEmpty
+                  child: _imagePath.startsWith('assets/')
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -256,24 +262,57 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                             Text('Add pictures'),
                           ],
                         )
-                      : SizedBox(
-                          height: 120,
-                          width: 120,
-                          child: _imagePath.startsWith('assets/')
-                              ? Image.asset(_imagePath, fit: BoxFit.cover)
-                              : Image.file(
-                                  File(_imagePath),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Image.asset(
-                                        'assets/no_image.png',
-                                        fit: BoxFit.cover,
+                      : Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                File(_imagePath),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            SizedBox(width: 40),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Text('Change Image..'),
+                                        Icon(Icons.change_circle),
+                                      ],
+                                    ),
+                                    SizedBox(width: 20),
+                                    if (!_imagePath.startsWith('assets/'))
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _imagePath = 'assets/no_image.png';
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                            horizontal: 8,
+                                          ),
+
+                                          child: const Column(
+                                            children: [
+                                              Text('Remove Image'),
+                                              Icon(Icons.cancel),
+                                            ],
+                                          ),
+                                        ),
                                       ),
+                                  ],
                                 ),
+                              ],
+                            ),
+                          ],
                         ),
                 ),
               ),
-
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,11 +44,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onPressed: () => context.push('/product_form'),
         child: const Icon(Icons.library_add, color: Colors.white),
       ),
-      body: productsAsync.when(
+      body:
+      
+      
+       productsAsync.when(
         data: (products) {
           if (products.isEmpty) {
             return const Center(child: Text('No products yet.'));
           }
+
+          
           return SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -104,12 +111,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     children: [
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
-                                        child: Image.asset(
-                                          product.imagePath,
-                                          width: 100,
-                                          height: 100,
-                                          fit: BoxFit.cover,
-                                        ),
+                                        child:
+                                            product.imagePath.startsWith(
+                                              'assets/',
+                                            )
+                                            ? Image.asset(
+                                                product.imagePath,
+                                                width: 100,
+                                                height: 100,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Image.file(
+                                                File(product.imagePath),
+                                                width: 100,
+                                                height: 100,
+                                                fit: BoxFit.cover,
+                                              ),
                                       ),
                                       Positioned(
                                         top: -1,
